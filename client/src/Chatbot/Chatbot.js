@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { saveMessage } from "../_actions/message_actions";
 import Message from "./Sections/Message";
 import { List, Avatar } from "antd";
-import { RobotOutlined } from "@ant-design/icons";
+import { RobotOutlined, SmileTwoTone } from "@ant-design/icons";
 
 import Card from "./Sections/Card";
 function Chatbot() {
@@ -13,6 +13,8 @@ function Chatbot() {
 
   useEffect(() => {
     eventQuery("welcomeToMyWebsite");
+    eventQuery("Welcome");
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -119,26 +121,35 @@ function Chatbot() {
 
     // template for normal text
     if (message.content && message.content.text && message.content.text.text) {
+      console.log(message);
       return (
         <Message key={i} who={message.who} text={message.content.text.text} />
       );
     } else if (message.content && message.content.payload.fields.card) {
       const AvatarSrc =
         message.who === "bot" ? (
-          <RobotOutlined type="robot" />
+          <Avatar icon={<RobotOutlined />} />
         ) : (
-          <RobotOutlined type="smile" />
+          <Avatar icon={<SmileTwoTone />} />
         );
 
       return (
         <div>
           <List.Item style={{ padding: "1rem" }}>
             <List.Item.Meta
-              avatar={<Avatar RobotOutlined={AvatarSrc} />}
-              title={message.who}
-              description={renderCards(
-                message.content.payload.fields.card.listValue.values
-              )}
+              avatar={<Avatar icon={AvatarSrc} />}
+              title={
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {message.who}
+                </div>
+              }
+              description={
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {renderCards(
+                    message.content.payload.fields.card.listValue.values
+                  )}
+                </div>
+              }
             />
           </List.Item>
         </div>
@@ -147,7 +158,6 @@ function Chatbot() {
 
     // template for card message
   };
-
   const renderMessage = (returnedMessages) => {
     if (returnedMessages) {
       return returnedMessages.map((message, i) => {
@@ -167,8 +177,18 @@ function Chatbot() {
         borderRadius: "7px",
       }}
     >
-      <div style={{ height: 644, width: "100%", overflow: "auto" }}>
-        {renderMessage(messagesFromRedux)}
+      <div
+        style={{
+          height: 644,
+          width: "100%",
+          overflow: "auto",
+        }}
+      >
+        <List
+          style={{ overflowX: "hidden" }} // 스크롤이 생기지 않도록 설정
+        >
+          {renderMessage(messagesFromRedux)}
+        </List>
       </div>
       <input
         style={{
