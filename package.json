@@ -1,0 +1,37 @@
+{
+  "name": "chatbot-app",
+  "version": "1.0.0",
+  "description": "chatbot-app",
+  "main": "index.js",
+  "engines": {
+    "node": "20.10.0",
+    "npm": "10.2.5"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "backend": "nodemon index.js",
+    "frontend": "npm run front --prefix client",
+    "dev": "concurrently \"npm run backend\"  \"npm run start --prefix client\""
+  },
+  "author": "YOU GOD",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/firestore": "^7.4.0",
+    "actions-on-google": "^2.4.1",
+    "antd": "^5.15.3",
+    "axios": "^1.6.8",
+    "body-parser": "^1.19.0",
+    "dialogflow": "^1.2.0",
+    "dialogflow-fulfillment": "^0.6.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.17.1",
+    "gcp-metadata": "^6.1.0",
+    "http-proxy-middleware": "^2.0.6",
+    "mongoose": "^8.2.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  }
+}
