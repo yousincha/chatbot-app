@@ -10,20 +10,21 @@ const projectId = config.googleProjectID;
 const sessionId = config.dialogFlowSessionID;
 const languageCode = config.dialogFlowSessionLanguageCode;
 
-// Create a new session client with Dialogflow service account credentials
+// Dialogflow 서비스 계정 자격 증명으로 새 세션 클라이언트를 생성합니다
 const sessionClient = new dialogflow.SessionsClient();
 
+// 세션 경로 설정
 const sessionPath = sessionClient.sessionPath(projectId, sessionId);
 
-// Text Query Route
+// textQuery Route
 router.post("/textQuery", async (req, res) => {
   const request = {
     session: sessionPath,
     queryInput: {
       text: {
-        // The query to send to the Dialogflow agent
+        // Dialogflow 에이전트에게 전송할 쿼리
         text: req.body.text,
-        // The language used by the client (en-US)
+        // 클라이언트에서 사용되는 언어 (en-US)
         languageCode: languageCode,
       },
     },
@@ -42,15 +43,15 @@ router.post("/textQuery", async (req, res) => {
   }
 });
 
-// Event Query Route
+// EventQuery Route
 router.post("/eventQuery", async (req, res) => {
   const request = {
     session: sessionPath,
     queryInput: {
       event: {
-        // The query to send to the Dialogflow agent
+        // Dialogflow 에이전트에게 전송할 쿼리
         name: req.body.event,
-        // The language used by the client (en-US)
+        // 클라이언트에서 사용되는 언어 (en-US)
         languageCode: languageCode,
       },
     },

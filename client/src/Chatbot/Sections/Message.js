@@ -12,9 +12,7 @@ function Message(props) {
     );
 
   return (
-    <List.Item
-      style={{ padding: "1rem", listStyleType: "none", overflowX: "hidden" }}
-    >
+    <List.Item style={{ padding: "1rem", listStyleType: "none" }}>
       <List.Item.Meta
         avatar={<Avatar icon={AvatarSrc} />}
         title={props.who}

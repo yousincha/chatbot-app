@@ -1,26 +1,25 @@
 import React, { useEffect } from "react";
 import Axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { saveMessage } from "../_actions/message_actions";
-import Message from "./Sections/Message";
 import { List, Avatar } from "antd";
 import { RobotOutlined, SmileTwoTone } from "@ant-design/icons";
-
+import { saveMessage } from "../_actions/message_actions";
+import Message from "./Sections/Message";
 import Card from "./Sections/Card";
+
 function Chatbot() {
   const dispatch = useDispatch();
   const messagesFromRedux = useSelector((state) => state.message.messages);
 
   useEffect(() => {
-    eventQuery("welcomeToMyWebsite");
-    eventQuery("Welcome");
-
+    // 페이지가 로드될 때 실행되는 초기화 함수
+    eventQuery("welcomeToFruit");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 사용자가 입력한 텍스트에 대한 쿼리를 수행하는 함수
   const textQuery = async (text) => {
-    //  First  Need to  take care of the message I sent
-    let conversation = {
+    const conversation = {
       who: "user",
       content: {
         text: {
@@ -30,66 +29,48 @@ function Chatbot() {
     };
 
     dispatch(saveMessage(conversation));
-    // console.log('text I sent', conversation)
 
-    // We need to take care of the message Chatbot sent
-    const textQueryVariables = {
-      text,
-    };
     try {
-      //I will send request to the textQuery ROUTE
-      const response = await Axios.post(
-        "/api/dialogflow/textQuery",
-        textQueryVariables
-      );
+      // Dialogflow에 텍스트 쿼리 요청
+      const response = await Axios.post("/api/dialogflow/textQuery", { text });
 
-      for (let content of response.data.fulfillmentMessages) {
-        conversation = {
-          who: "bot",
-          content: content,
-        };
-
-        dispatch(saveMessage(conversation));
-      }
+      // Dialogflow로부터의 응답 처리
+      response.data.fulfillmentMessages.forEach((content) => {
+        dispatch(saveMessage({ who: "bot", content }));
+      });
     } catch (error) {
-      conversation = {
+      // 오류가 발생한 경우
+      const conversation = {
         who: "bot",
         content: {
           text: {
-            text: " Error just occured, please check the problem",
+            text: "오류가 발생했습니다.",
           },
         },
       };
-
       dispatch(saveMessage(conversation));
     }
   };
 
+  // 이벤트에 대한 쿼리를 수행하는 함수
   const eventQuery = async (event) => {
-    // We need to take care of the message Chatbot sent
-    const eventQueryVariables = {
-      event,
-    };
     try {
-      //I will send request to the textQuery ROUTE
-      const response = await Axios.post(
-        "/api/dialogflow/eventQuery",
-        eventQueryVariables
-      );
-      for (let content of response.data.fulfillmentMessages) {
-        let conversation = {
-          who: "bot",
-          content: content,
-        };
+      // Dialogflow에 이벤트 쿼리 요청
+      const response = await Axios.post("/api/dialogflow/eventQuery", {
+        event,
+      });
 
-        dispatch(saveMessage(conversation));
-      }
+      // Dialogflow로부터의 응답 처리
+      response.data.fulfillmentMessages.forEach((content) => {
+        dispatch(saveMessage({ who: "bot", content }));
+      });
     } catch (error) {
-      let conversation = {
+      // 오류가 발생한 경우
+      const conversation = {
         who: "bot",
         content: {
           text: {
-            text: " Error just occured, please check the problem",
+            text: "에러가 발생하였습니다.",
           },
         },
       };
@@ -97,110 +78,102 @@ function Chatbot() {
     }
   };
 
-  const keyPressHanlder = (e) => {
+  // 메시지 렌더링 함수
+  const renderMessage = (messages) => {
+    return messages.map((message, index) => {
+      if (
+        message.content &&
+        message.content.text &&
+        message.content.text.text
+      ) {
+        // 일반 텍스트인 경우
+        return (
+          <Message
+            key={index}
+            who={message.who}
+            text={message.content.text.text}
+          />
+        );
+      } else if (
+        message.content &&
+        message.content.payload &&
+        message.content.payload.fields.card
+      ) {
+        // 카드가 있는 경우
+        const AvatarSrc =
+          message.who === "bot" ? (
+            <Avatar icon={<RobotOutlined />} />
+          ) : (
+            <Avatar icon={<SmileTwoTone />} />
+          );
+
+        return (
+          <div key={index}>
+            <List.Item style={{ padding: "1rem" }}>
+              <List.Item.Meta
+                avatar={<Avatar icon={AvatarSrc} />}
+                title={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    {message.who}
+                  </div>
+                }
+                description={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    {renderCards(
+                      message.content.payload.fields.card.listValue.values
+                    )}
+                  </div>
+                }
+              />
+            </List.Item>
+          </div>
+        );
+      } else {
+        return null;
+      }
+    });
+  };
+
+  // 카드 렌더링 함수
+  const renderCards = (cards) => {
+    return cards.map((card) => (
+      <Card key={card.id} cardInfo={card.structValue} />
+    ));
+  };
+
+  // 엔터 키 이벤트 핸들러
+  const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       if (!e.target.value) {
-        return alert("메시지를 입력해주세요.");
+        alert("메시지를 입력해주세요.");
+        return;
       }
 
-      //we will send request to text query route
+      // 사용자가 입력한 텍스트 쿼리 실행
       textQuery(e.target.value);
 
+      // 입력 필드 초기화
       e.target.value = "";
     }
   };
 
-  const renderCards = (cards) => {
-    return cards.map((card, i) => <Card key={i} cardInfo={card.structValue} />);
-  };
-
-  const renderOneMessage = (message, i) => {
-    console.log("message", message);
-
-    // we need to give some condition here to separate message kinds
-
-    // template for normal text
-    if (message.content && message.content.text && message.content.text.text) {
-      console.log(message);
-      return (
-        <Message key={i} who={message.who} text={message.content.text.text} />
-      );
-    } else if (message.content && message.content.payload.fields.card) {
-      const AvatarSrc =
-        message.who === "bot" ? (
-          <Avatar icon={<RobotOutlined />} />
-        ) : (
-          <Avatar icon={<SmileTwoTone />} />
-        );
-
-      return (
-        <div>
-          <List.Item style={{ padding: "1rem" }}>
-            <List.Item.Meta
-              avatar={<Avatar icon={AvatarSrc} />}
-              title={
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  {message.who}
-                </div>
-              }
-              description={
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  {renderCards(
-                    message.content.payload.fields.card.listValue.values
-                  )}
-                </div>
-              }
-            />
-          </List.Item>
-        </div>
-      );
-    }
-
-    // template for card message
-  };
-  const renderMessage = (returnedMessages) => {
-    if (returnedMessages) {
-      return returnedMessages.map((message, i) => {
-        return renderOneMessage(message, i);
-      });
-    } else {
-      return null;
-    }
-  };
-
   return (
-    <div
-      style={{
-        height: 700,
-        width: 700,
-        border: "3px solid black",
-        borderRadius: "7px",
-      }}
-    >
-      <div
-        style={{
-          height: 644,
-          width: "100%",
-          overflow: "auto",
-        }}
-      >
-        <List
-          style={{ overflowX: "hidden" }} // 스크롤이 생기지 않도록 설정
-        >
-          {renderMessage(messagesFromRedux)}
-        </List>
+    <div style={{ height: 600, width: 700, border: "2px solid black" }}>
+      <div style={{ height: 547, width: "100%", overflow: "auto" }}>
+        <List>{renderMessage(messagesFromRedux)}</List>
       </div>
       <input
         style={{
           margin: 0,
           width: "100%",
           height: 50,
-          borderRadius: "4px",
           padding: "5px",
           fontSize: "1rem",
+          border: "1px solid #ccc",
+          backgroundColor: "rgba(204, 204, 204, 0.1)",
         }}
         placeholder="Send a message..."
-        onKeyPress={keyPressHanlder}
+        onKeyPress={handleKeyPress}
         type="text"
       />
     </div>
